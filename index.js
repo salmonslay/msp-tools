@@ -21,7 +21,7 @@ getToken((error, identity) => {
         printProfileData(userInfo.data);
 
         // Try to give an autograph every 5 minutes.
-        cron.schedule('*/5 * * * *', () => {
+        cron.schedule(process.env.MSP_AUTOGRAPH_CRON, () => {
             sendAutograph(identity);
         });
     });
