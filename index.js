@@ -40,14 +40,8 @@ function getToken(callback) {
                 "accept": "*/*",
                 "accept-language": "en-GB,en;q=0.9,en-US;q=0.8,sv;q=0.7",
                 "content-type": "application/x-www-form-urlencoded",
-                "sec-ch-ua": "\"Chromium\";v=\"92\", \" Not A;Brand\";v=\"99\", \"Microsoft Edge\";v=\"92\"",
-                "sec-ch-ua-mobile": "?0",
-                "sec-fetch-dest": "empty",
-                "sec-fetch-mode": "cors",
-                "sec-fetch-site": "cross-site"
+                "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Microsoft Edge\";v=\"98\"",
             },
-            "referrer": `https://moviestarplanet2.${process.env.MSP_SERVER.toLocaleUpperCase()}/`,
-            "referrerPolicy": "strict-origin-when-cross-origin",
             "body": `client_id=unity.client&client_secret=secret&grant_type=password&scope=openid%20nebula%20offline_access&username=${process.env.MSP_SERVER}%7c${process.env.MSP_USERNAME}&password=${process.env.MSP_PASSWORD}&acr_values=gameId%3aj68d`,
             "method": "POST",
             "mode": "cors"
@@ -69,14 +63,8 @@ function getToken(callback) {
                         "accept-language": "en-GB,en;q=0.9",
                         "authorization": "Basic dW5pdHkuY2xpZW50OnNlY3JldA==",
                         "content-type": "application/x-www-form-urlencoded",
-                        "sec-ch-ua": "\"Chromium\";v=\"92\", \" Not A;Brand\";v=\"99\", \"Microsoft Edge\";v=\"92\"",
-                        "sec-ch-ua-mobile": "?0",
-                        "sec-fetch-dest": "empty",
-                        "sec-fetch-mode": "cors",
-                        "sec-fetch-site": "cross-site"
+                        "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Microsoft Edge\";v=\"98\"",
                     },
-                    "referrer": `https://moviestarplanet2.${process.env.MSP_SERVER.toLocaleUpperCase()}/`,
-                    "referrerPolicy": "strict-origin-when-cross-origin",
                     "body": `grant_type=refresh_token&refresh_token=${loginIdentity.refresh_token}&acr_values=gameId%3aj68d%20profileId%3a${process.env.MSP_ID}`,
                     "method": "POST",
                     "mode": "cors"
@@ -103,13 +91,6 @@ function getUserInfo(data, callback) {
                 "authorization": "Bearer " + data.access_token,
                 "content-type": "application/json",
                 "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Microsoft Edge\";v=\"98\"",
-                "sec-ch-ua-mobile": "?0",
-                "sec-ch-ua-platform": "\"Windows\"",
-                "sec-fetch-dest": "empty",
-                "sec-fetch-mode": "cors",
-                "sec-fetch-site": "cross-site",
-                "Referer": `https://moviestarplanet2.${process.env.MSP_SERVER.toLocaleUpperCase()}/`,
-                "Referrer-Policy": "strict-origin-when-cross-origin"
             },
 
             // the body is copied from the network tab in devtools, it doesn't look very nice but their API is private
@@ -143,13 +124,6 @@ function sendAutograph(data) {
             "authorization": "Bearer " + data.access_token,
             "content-type": "application/json",
             "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Microsoft Edge\";v=\"98\"",
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": "\"Windows\"",
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "cross-site",
-            "Referer": "https://moviestarplanet2.de/",
-            "Referrer-Policy": "strict-origin-when-cross-origin"
         },
         "body": `{\"greetingType\":\"autograph\",\"receiverProfileId\":\"${process.env.MSP_AUTOGRAPH_ID}\",\"compatibilityMode\":\"Nebula\",\"useAltCost\":false}`,
         "method": "POST"
