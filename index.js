@@ -1,14 +1,15 @@
 import fetch from 'node-fetch';
+import cron from 'node-cron';
 import 'dotenv/config';
 
-getToken((error, fullIdentity) => {
+getToken((error, identity) => {
     if (error) {
         console.error(error);
         return;
     }
 
     getUserInfo({
-        access_token: fullIdentity.access_token,
+        access_token: identity.access_token,
     }, (error, userInfo) => {
         if (error) {
             console.error(`An error occurred while getting user info: ${error}`);
@@ -18,12 +19,17 @@ getToken((error, fullIdentity) => {
         // Print the user's profile data.
         // userInfo.data is the raw JSON data.
         printProfileData(userInfo.data);
+
+        // Try to give an autograph every 5 minutes.
+        cron.schedule('*/5 * * * *', () => {
+            sendAutograph(identity);
+        });
     });
 });
 
 /**
  * Starts a new OAuth2 session and returns the access token.
- * @param {*} callback The callback function to call when the request is complete
+ * @param {callback} callback The callback function to call when the request is complete
  */
 function getToken(callback) {
     console.log(`Logging in as ${process.env.MSP_USERNAME}...\n`);
@@ -85,8 +91,8 @@ function getToken(callback) {
 
 /**
  * Gets the user info from the access token.
- * @param {*} data The data to send to the endpoint
- * @param {*} callback The callback function to call when the request is complete
+ * @param {json} data The data to send to the endpoint
+ * @param {callback} callback The callback function to call when the request is complete
  */
 function getUserInfo(data, callback) {
     // Get user info with access token 
@@ -120,12 +126,44 @@ function getUserInfo(data, callback) {
             }
         });
 }
+/**
+ * Tries to send an autograph to the user defined in the environment variables.
+ * @param {json} data The token data
+ */
+function sendAutograph(data) {
+    // Cancel if there is no user to send to
+    if (!process.env.MSP_AUTOGRAPH_ID)
+        return;
+
+    // Send the autograph
+    fetch(`https://eu.mspapis.com/profilegreetings/v1/profiles/${process.env.MSP_ID}/games/j68d/greetings`, {
+        "headers": {
+            "accept": "*/*",
+            "accept-language": "en-GB,en;q=0.9",
+            "authorization": "Bearer " + data.access_token,
+            "content-type": "application/json",
+            "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Microsoft Edge\";v=\"98\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "Referer": "https://moviestarplanet2.de/",
+            "Referrer-Policy": "strict-origin-when-cross-origin"
+        },
+        "body": `{\"greetingType\":\"autograph\",\"receiverProfileId\":\"${process.env.MSP_AUTOGRAPH_ID}\",\"compatibilityMode\":\"Nebula\",\"useAltCost\":false}`,
+        "method": "POST"
+    }).then(res => res.json()
+        .then(res => {
+            console.log(`Sent an autograph. Result: ${res.result}`);
+        }));
+}
 
 /**
  * An example of how to display and use the received data.
- * @param {*} data The MSP data to print out
+ * @param {json} data The MSP data to print out
  */
-function printProfileData(profileData, textString) {
+function printProfileData(profileData) {
     // Colors for the console
     const FgYellow = "\x1b[33m";
     const FgWhite = "\x1b[37m"

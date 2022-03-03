@@ -21,6 +21,7 @@
   "homepage": "https://github.com/LiterallyFabian/msp-tools#readme",
   "dependencies": {
     "dotenv": "^16.0.0",
+    "node-cron": "^3.0.0",
     "node-fetch": "^3.2.1"
   },
   "type": "module"
