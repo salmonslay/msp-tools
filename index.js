@@ -1,20 +1,31 @@
 import fetch from 'node-fetch';
 import 'dotenv/config';
 
-// get token
-getToken(null, (error, token) => {
+getToken((error, fullIdentity) => {
     if (error) {
-        console.log(error);
-    } else {
-        console.log(token);
+        console.error(error);
+        return;
     }
+
+    getUserInfo({
+        access_token: fullIdentity.access_token,
+    }, (error, userInfo) => {
+        if (error) {
+            console.error(`An error occurred while getting user info: ${error}`);
+            return;
+        }
+
+        // Print the user's profile data.
+        // userInfo.data is the raw JSON data.
+        printProfileData(userInfo.data);
+    });
 });
 
 /**
  * Starts a new OAuth2 session and returns the access token.
+ * @param {*} callback The callback function to call when the request is complete
  */
-function getToken(data, callback) {
-    var authorization = "Bearer ";
+function getToken(callback) {
     console.log(`Logging in as ${process.env.MSP_USERNAME}...\n`);
 
     //Get refresh token to generate access token
@@ -38,8 +49,7 @@ function getToken(data, callback) {
         .then(loginIdentity => {
 
             // Check if login was successful
-            if (loginIdentity.error)
-            {
+            if (loginIdentity.error) {
                 callback(loginIdentity.error_description, null);
                 throw new Error(`${loginIdentity.error} - ${loginIdentity.error_description}`);
             }
@@ -66,11 +76,69 @@ function getToken(data, callback) {
                     "mode": "cors"
                 }).then(res => res.json())
                 .then(fullIdentity => {
-                    authorization += fullIdentity.access_token;
-
                     console.log(`Authorized as ${process.env.MSP_USERNAME}\n`);
 
-                    callback("", authorization);
+                    callback(null, fullIdentity);
                 });
         });
+}
+
+/**
+ * Gets the user info from the access token.
+ * @param {*} data The data to send to the endpoint
+ * @param {*} callback The callback function to call when the request is complete
+ */
+function getUserInfo(data, callback) {
+    // Get user info with access token 
+    fetch("https://eu.mspapis.com/edgeprofile/graphql/graphql", {
+            "headers": {
+                "accept": "*/*",
+                "accept-language": "en-GB,en;q=0.9,en-US;q=0.8,sv;q=0.7",
+                "authorization": "Bearer " + data.access_token,
+                "content-type": "application/json",
+                "sec-ch-ua": "\" Not A;Brand\";v=\"99\", \"Chromium\";v=\"98\", \"Microsoft Edge\";v=\"98\"",
+                "sec-ch-ua-mobile": "?0",
+                "sec-ch-ua-platform": "\"Windows\"",
+                "sec-fetch-dest": "empty",
+                "sec-fetch-mode": "cors",
+                "sec-fetch-site": "cross-site",
+                "Referer": `https://moviestarplanet2.${process.env.MSP_SERVER.toLocaleUpperCase()}/`,
+                "Referrer-Policy": "strict-origin-when-cross-origin"
+            },
+
+            // the body is copied from the network tab in devtools, it doesn't look very nice but their API is private
+            "body": `{\"query\":\"\\r\\n            query getProfile($profileId: String!, $gameId:String!)\\r\\n            {\\r\\n               profile(profileId: $profileId) {\\r\\n                    name\\r\\n                \\r\\n                    attributes(gameId: $gameId) {\\r\\n                      additionalData {\\r\\n                        key\\r\\n                        value\\r\\n                      }\\r\\n                    }\\r\\n\\r\\n                    avatar(gameId: $gameId) {\\r\\n\\t\\t\\t\\t\\t  id\\r\\n                      full\\r\\n                      face\\r\\n                    }\\r\\n\\r\\n                    progression(gameId: $gameId) {\\r\\n                      values {\\r\\n                        name\\r\\n                        count\\r\\n                      }\\r\\n                    }    \\r\\n                    \\r\\n                    balance(gameId: $gameId) {\\r\\n                      available {\\r\\n                        currency\\r\\n                        count\\r\\n                      }\\r\\n                    }\\r\\n                    \\r\\n                    memberships {\\r\\n                      currentTierSecondsLeft\\r\\n                    }\\r\\n                }\\r\\n            }\",\"variables\":\"{\\\"profileId\\\":\\\"${process.env.MSP_ID}\\\",\\\"gameId\\\":\\\"j68d\\\"}\",\"operationName\":\"getProfile\"}`,
+            "method": "POST"
+        }).then(res => res.json())
+        .then(profileData => {
+            // Check if login was successful
+            if (profileData.errors) {
+                callback(profileData.errors[0].message, null);
+                return;
+            } else {
+                callback(null, profileData);
+            }
+        });
+}
+
+/**
+ * An example of how to display and use the received data.
+ * @param {*} data The MSP data to print out
+ */
+function printProfileData(profileData, textString) {
+    // Colors for the console
+    const FgYellow = "\x1b[33m";
+    const FgWhite = "\x1b[37m"
+    console.log("User Info:")
+    console.log("\tCharacter metadata:");
+    console.log(FgYellow, `\t\tUsername:`, FgWhite, profileData.profile.name);
+    console.log(FgYellow, `\t\tGender:`, FgWhite, profileData.profile.attributes.additionalData[1].value);
+
+    console.log("\n\tCharacter avatar:");
+    console.log(FgYellow, `\t\tAvatar Image:`, FgWhite, `https://ugc-eu.mspcdns.com/${profileData.profile.avatar.full}`);
+    console.log(FgYellow, `\t\tFace Image:`, FgWhite, `https://ugc-eu.mspcdns.com/${profileData.profile.avatar.face}`);
+
+    console.log(`\n\tCharacter progression:`);
+    console.log(FgYellow, `\t\tFame:`, FgWhite, `${profileData.profile.progression.values[0].count} (level ${profileData.profile.progression.values[1].count})`);
+    console.log(FgYellow, `\t\tStar Coins:`, FgWhite, `${profileData.profile.balance.available[0].count}\n`);
 }
