@@ -1,0 +1,22 @@
+{
+  "name": "msp-tools",
+  "version": "1.0.0",
+  "description": "Miscellaneous tools for MovieStarPlanet2.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LiterallyFabian/msp-tools.git"
+  },
+  "keywords": [
+    "msp"
+  ],
+  "author": "LiterallyFabian",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/LiterallyFabian/msp-tools/issues"
+  },
+  "homepage": "https://github.com/LiterallyFabian/msp-tools#readme"
+}
